@@ -158,8 +158,8 @@ function main {
 
   # check if the git branch exists on the remote, and if not, use the fallback
   if (-Not ( `
-    wsl -d $wslLabel --cd "~/PSBBN-Definitive-Project" -- `
-    git fetch `&`& git branch -r --list origin/$gitBranch `
+    wsl -d $wslLabel -- `
+    bash -c "[ -d ~/PSBBN-Definitive-Project/.git ] && cd ~/PSBBN-Definitive-Project && git fetch && git branch -r --list origin/$gitBranch" `
   )) {
     $gitBranch = $fallbackGitBranch
   }
@@ -268,6 +268,7 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
                                                     ---
                                          Launcher for Windows v$version
                                               Written by Yornn
+                                           Modified by coreylad
 
 "
 }
