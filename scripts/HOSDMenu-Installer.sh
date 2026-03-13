@@ -467,8 +467,8 @@ read -p "Enter the number for your chosen video output: " choice
 
 case "$choice" in
     2)
-        VIDEO_OUTPUT="ycbcr"
-        VIDEO_OUTPUT_DISPLAY="YCbCr (Component)"
+        VIDEO_OUTPUT="component"
+        VIDEO_OUTPUT_DISPLAY="Component"
         ;;
     *)
         VIDEO_OUTPUT="rgb"
