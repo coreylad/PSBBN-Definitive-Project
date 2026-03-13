@@ -1,0 +1,55 @@
+name: Update HOSDMenu
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch latest HOSDMenu release from fork
+        run: |
+          apk add --no-cache curl jq unzip 2>/dev/null || apt-get install -y curl jq unzip 2>/dev/null || true
+
+          RELEASE_JSON=$(curl -sL "https://api.github.com/repos/coreylad/OSDMenu/releases/latest")
+          ASSET_URL=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name | test("^osdmenu-.*\\.zip$")) | .browser_download_url' | head -1)
+          TAG=$(echo "$RELEASE_JSON" | jq -r '.tag_name')
+          VERSION="${TAG#v}"
+
+          if [ -z "$ASSET_URL" ] || [ "$ASSET_URL" = "null" ]; then
+            echo "No release asset found."
+            exit 1
+          fi
+
+          echo "Downloading HOSDMenu release: $TAG ($ASSET_URL)"
+          curl -sL -o osdmenu.zip "$ASSET_URL"
+          unzip -q -o osdmenu.zip -d osdmenu_release
+
+          echo "Copying hosdmenu.elf..."
+          cp osdmenu_release/hosdmenu.elf scripts/assets/osdmenu/hosdmenu.elf
+
+          echo "Copying OSDMBR.XLF..."
+          cp osdmenu_release/osdmbr/OSDMBR.XLF scripts/assets/osdmenu/OSDMBR.XLF
+
+          echo "$VERSION" > scripts/assets/osdmenu/version.txt
+
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scripts/assets/osdmenu/
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update HOSDMenu to $VERSION"
+            git push
+          fi

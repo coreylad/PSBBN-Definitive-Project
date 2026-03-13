@@ -1588,7 +1588,7 @@ else
     if [ "$OSD_UPDATE" != "no" ]; then
         echo "   OSDMenu System Software updated to version: $LATEST_OSD" | tee -a "${LOG_FILE}"
         echo
-        echo "   The OSDMenu changelog can be found here: https://github.com/pcm720/OSDMenu/releases"
+        echo "   The OSDMenu changelog can be found here: https://github.com/coreylad/OSDMenu/releases"
         if [ "$LATEST_OSD" == "1.2.0" ] && [ "$PSBBN_UPDATE" == "no" ]; then
             echo
             echo "   New Features:"

@@ -1387,6 +1387,95 @@ option_five() {
     read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
 }
 
+option_six() {
+    echo "########################################################################################################" >> "${LOG_FILE}"
+    echo "Change Video Output:" >> "${LOG_FILE}"
+
+    SCREEN_SPLASH
+
+    clean_up
+
+    if [ "$OS" = "HOSD" ]; then
+        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        return 1
+    fi
+
+    while :; do
+        SCREEN_SPLASH
+        cat << "EOF"
+                         Please select a video output mode from the list below:
+
+                         1) RGB
+
+                         2) YCbCr / Component (Y Pb/Cb Pr/Cr)
+
+                         b) Back
+
+EOF
+        read -rp "                         Select an option: " choice
+
+        case "$choice" in
+            1)
+                VIDEO_OUTPUT="rgb"
+                VIDEO_NAME="RGB"
+                break
+                ;;
+            2)
+                VIDEO_OUTPUT="ycbcr"
+                VIDEO_NAME="YCbCr (Component)"
+                break
+                ;;
+            b|B)
+                return 0
+                ;;
+            *)
+                echo
+                echo -n "                         Invalid choice, enter 1, 2, or b."
+                sleep 3
+                ;;
+        esac
+    done
+
+    echo "Video output selected: $VIDEO_OUTPUT" >> "${LOG_FILE}"
+
+    APA_PARTITIONS=("__sysconf")
+
+    clean_up   && \
+    mapper_probe || return 1
+    mount_pfs    || return 1
+
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    mkdir -p "${SCRIPTS_DIR}/tmp"
+    cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
+
+    if grep -q '^osd_videooutput =' "${OSDMBR_CNF}"; then
+        sed -i "s/^osd_videooutput =.*/osd_videooutput = $VIDEO_OUTPUT/" "${OSDMBR_CNF}" || {
+            error_msg "[X] Error: Failed to update osd_videooutput in OSDMBR.CNF."
+            return 1
+        }
+    else
+        echo "osd_videooutput = $VIDEO_OUTPUT" >> "${OSDMBR_CNF}" || {
+            error_msg "[X] Error: Failed to add osd_videooutput to OSDMBR.CNF."
+            return 1
+        }
+    fi
+
+    cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
+
+    clean_up || return 1
+    echo clean up afterwards: >> "${LOG_FILE}"
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    SCREEN_SPLASH
+    echo "    ========================== [✓] Video Output Successfully Changed to $VIDEO_NAME ==========================" | tee -a "${LOG_FILE}"
+    echo
+    read -n 1 -s -r -p "                                   Press any key to return to the menu..." </dev/tty
+
+}
+
 EXTRAS_SPLASH() {
 clear
     cat << "EOF"
@@ -1415,6 +1504,8 @@ display_menu() {
                                     4) Change Screen Settings
 
                                     5) Clear Art & Icon Cache
+
+                                    6) Change Video Output
 
                                     b) Back to Main Menu
 
@@ -1474,6 +1565,9 @@ while true; do
             ;;
         5)
             option_five
+            ;;
+        6)
+            option_six
             ;;
         b|B)
             break
