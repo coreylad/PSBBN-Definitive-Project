@@ -726,6 +726,28 @@ if [ "$MODE" = "install" ]; then
     esac
 
     echo "Language set to: $LANG" >> "${LOG_FILE}"
+
+    echo
+    echo "Please select your video output type:"
+    echo
+    echo "1) RGB (default — for SCART, VGA, and most other connections)"
+    echo "2) YCbCr / Component (for PS2 to HDMI adapters)"
+    echo
+    read -p "Enter the number for your chosen video output: " choice
+
+    case "$choice" in
+        2)
+            VIDEO_OUTPUT="ycbcr"
+            VIDEO_OUTPUT_DISPLAY="YCbCr (Component)"
+            ;;
+        *)
+            VIDEO_OUTPUT="rgb"
+            VIDEO_OUTPUT_DISPLAY="RGB"
+            ;;
+    esac
+
+    echo "Video output set to: $VIDEO_OUTPUT_DISPLAY" >> "${LOG_FILE}"
+
 else
 
     UPDATE_SPLASH
@@ -1238,15 +1260,16 @@ ps1drv_use_ps1vn = 1
 app_gameid = 1
 prefer_bbn = 1
 osd_language = $LANG
+osd_videooutput = $VIDEO_OUTPUT
 EOL
     else
         cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<EOL || error_msg "Error" "Failed to write OSDMBR.CNF."
 boot_auto = \$PSBBN
 boot_cross = \$HOSDSYS
-boot_circle = 
+boot_circle =
 boot_square =
-boot_triangle = 
-boot_start = 
+boot_triangle =
+boot_start =
 cdrom_skip_ps2logo = 0
 cdrom_disable_gameid = 0
 cdrom_use_dkwdrv = 0
@@ -1256,6 +1279,7 @@ ps1drv_use_ps1vn = 1
 app_gameid = 1
 prefer_bbn = 1
 osd_language = $LANG
+osd_videooutput = $VIDEO_OUTPUT
 EOL
     fi
 else

@@ -457,6 +457,27 @@ esac
 
 echo "Language set to: $LANG" >> "${LOG_FILE}"
 
+echo
+echo "Please select your video output type:"
+echo
+echo "1) RGB (default — for SCART, VGA, and most other connections)"
+echo "2) YCbCr / Component (for PS2 to HDMI adapters)"
+echo
+read -p "Enter the number for your chosen video output: " choice
+
+case "$choice" in
+    2)
+        VIDEO_OUTPUT="ycbcr"
+        VIDEO_OUTPUT_DISPLAY="YCbCr (Component)"
+        ;;
+    *)
+        VIDEO_OUTPUT="rgb"
+        VIDEO_OUTPUT_DISPLAY="RGB"
+        ;;
+esac
+
+echo "Video output set to: $VIDEO_OUTPUT_DISPLAY" >> "${LOG_FILE}"
+
 echo | tee -a "${LOG_FILE}"
 echo -n "Initialising the drive..." | tee -a "${LOG_FILE}"
 
@@ -580,8 +601,8 @@ cp "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu/" 2>> "
 cp "${ASSETS_DIR}/extras"/{OSDSYS_A.XLF,FNTOSD,ICOIMAGE,JISUCS,SKBIMAGE,SNDIMAGE,TEXIMAGE} "${STORAGE_DIR}/__system/osd100/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
 
 
-cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<'EOL' || error_msg "Error" "Failed to write OSDMBR.CNF."
-boot_auto = $HOSDSYS
+cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<EOL || error_msg "Error" "Failed to write OSDMBR.CNF."
+boot_auto = \$HOSDSYS
 boot_cross =
 boot_circle =
 boot_square =
@@ -594,6 +615,7 @@ ps1drv_enable_smooth = 0
 ps1drv_use_ps1vn = 1
 app_gameid = 1
 prefer_bbn = 0
+osd_videooutput = $VIDEO_OUTPUT
 EOL
 
 cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" <<'EOL' || error_msg "Error" "Failed to write OSDMBR.CNF."
